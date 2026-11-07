@@ -1,0 +1,22 @@
+line-length = 79
+
+[lint]
+select = [
+    "ANN",
+    "D",
+    "E303",
+    "E501",
+    "I001"
+]
+ignore = [
+    "D202",
+]
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "ANN",
+    "D"
+]
+
+[lint.pydocstyle]
+convention = "pep257"
