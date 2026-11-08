@@ -4,7 +4,7 @@ from application import create_app
 
 
 def test_home():
-    client = TestClient(create_app())
+    client = TestClient(create_app(None))
 
     response = client.get("/")
 
@@ -13,7 +13,7 @@ def test_home():
 
 
 def test_home2():
-    client = TestClient(create_app())
+    client = TestClient(create_app(None))
 
     response = client.get("/")
 

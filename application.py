@@ -1,9 +1,12 @@
 """The Pizza Application."""
 
+from typing import Any
+
 from fastapi import FastAPI
+from sqlalchemy.engine import Engine
 
 
-def create_app() -> FastAPI:
+def create_app(db_engine: Engine | None) -> FastAPI:
     """Create the Piazza FastAPI application."""
 
     app = FastAPI()

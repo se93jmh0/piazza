@@ -5,7 +5,7 @@ def test_main(monkeypatch):
     class FA:
         pass
 
-    monkeypatch.setattr(application, "create_app", lambda: FA())
+    monkeypatch.setattr(application, "create_app", lambda _: FA())
 
     import main
 
