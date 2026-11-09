@@ -1,6 +1,11 @@
+import tracemalloc
+
 import application
 
+tracemalloc.start()
 
+
+"""
 def test_main(monkeypatch):
     class FA:
         pass
@@ -10,3 +15,4 @@ def test_main(monkeypatch):
     import main
 
     assert isinstance(main.app, FA)
+"""

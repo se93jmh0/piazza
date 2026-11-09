@@ -1,5 +1,6 @@
 PyJWT==2.15.1
 black==26.10.1
+email-validator==2.3.0
 fastapi==0.141.1
 httpx2==2.16.0
 pwdlib[argon2]==0.3.1

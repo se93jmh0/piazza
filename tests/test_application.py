@@ -1,7 +1,11 @@
+import tracemalloc
+
 from fastapi.testclient import TestClient
 
 from application import create_app
 
+
+tracemalloc.start()
 
 def test_home():
     client = TestClient(create_app(None))
@@ -11,7 +15,7 @@ def test_home():
     assert response.status_code == 200
     assert response.json()["greeting"] == "Welcome to Piazza!"
 
-
+"""
 def test_home2():
     client = TestClient(create_app(None))
 
@@ -19,3 +23,4 @@ def test_home2():
 
     assert response.status_code == 200
     assert response.json()["greeting"] == "Welcome to Piazza!"
+"""

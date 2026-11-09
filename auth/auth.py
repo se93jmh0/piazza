@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from auth import models, schemas
-from database import get_db
+from runtime import Runtime
 from security import create_access_token, hash_password, verify_password
 
 router = APIRouter()
@@ -13,9 +13,11 @@ router = APIRouter()
 
 @router.post("/register", response_model=schemas.UserResponse, status_code=201)
 def register(
-    user: schemas.UserCreate, db: Session = Depends(get_db)
+    user: schemas.UserCreate, runtime: Runtime = Depends(Runtime.get)
 ) -> models.User:
     """TODO."""
+
+    db = runtime.get_db_session()
 
     # Check whether another user already has this email.
     existing_user = (
@@ -46,9 +48,11 @@ def register(
 
 @router.post("/login", response_model=schemas.TokenResponse)
 def login(
-    user_login: schemas.UserLogin, db: Session = Depends(get_db)
+    user_login: schemas.UserLogin, runtime: Runtime = Depends(Runtime.get)
 ) -> dict[str, str]:
     """TODO."""
+
+    db = runtime.get_db_session()
 
     # Find the user by email.
     user = (

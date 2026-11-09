@@ -11,7 +11,7 @@ from pwdlib import PasswordHash
 from sqlalchemy.orm import Session
 
 from auth import models
-from database import get_db
+from runtime import Runtime
 
 # Read the same secret on each restart; never commit its value.
 SECRET_KEY = os.environ["JWT_SECRET"]
@@ -60,7 +60,7 @@ def create_access_token(data: dict) -> str:
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-    db: Session = Depends(get_db),
+    db: Session = Depends(Runtime.get),
 ) -> models.User:
     """TODO."""
 

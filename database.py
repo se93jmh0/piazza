@@ -7,23 +7,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm.session import Session
 
-import constants
-
-DATABASE_URL = f"sqlite:///{constants.PIAZZA_DATABASE_PATH}"
-
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def get_db() -> Generator[Session, Any]:
-    """TODO."""
+class Database:
+    """."""
 
-    # Open one database session for the request.
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        # Close it after the request finishes.
-        db.close()
+    def __init__(self, db_path: Path) -> None:
+        """."""
+        DATABASE_URL = f"sqlite:///{db_path}"
+        self.engine = create_engine(
+            DATABASE_URL, connect_args={"check_same_thread": False}
+        )
+
+        self.SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=self.engine
+        )
+
