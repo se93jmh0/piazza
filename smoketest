@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+
+PIAZZA_SMOKETEST_PORT="${PIAZZA_SMOKETEST_PORT:-8000}"
+
+
+smoketest_success=0
+tmpdir="$(mktemp --directory piazza-smoketest.XXXXXXXX)"
+on_exit() {
+    kill -SIGINT %1
+    wait
+
+    if [ "$smoketest_success" -eq "1" ]
+    then
+        rm -rf $tmpdir
+    else
+        echo "Piazza Smoketest Failed! &:("
+        echo "Working Directory: $tmpdir"
+    fi
+}
+trap "on_exit" EXIT
+
+
+export JWT_SECRET="0123456789ABCDEFFEDCBA9876543210"
+export DATABASE_PATH="$tmpdir/piazza.db"
+
+
+do_curl() {
+    method="$1"
+    uri="$2"
+    body="${3:-}"
+    jwt="${4:-}"
+
+    unset do_curl_response
+    do_curl_response=$(curl \
+        --silent --trace-ascii $tmpdir/curl.trace --fail-with-body \
+        --request "$method" \
+        --header "Authorization: Bearer $jwt" \
+        --header "Content-Type: application/json" \
+        --data "$body" \
+        "$uri" 2>$tmpdir/curl.stderr)
+}
+
+
+uvicorn_stdout="${tmpdir}/uvicorn.stdout"
+uvicorn_stderr="${tmpdir}/uvicorn.stderr"
+uvicorn main:app --port $PIAZZA_SMOKETEST_PORT \
+    >$uvicorn_stdout 2>$uvicorn_stderr &
+while ! grep --quiet "Uvicorn running" $uvicorn_stderr
+do
+    sleep 1
+done
+
+
+# Register user.
+do_curl "POST" "http://localhost:$SMOKETEST_PORT/auth/register" \
+    '{ "email": "jhorns01@student.bbk.ac.uk", "password": "123456" }'
+
+# Log user in.
+do_curl "POST" "http://localhost:$SMOKETEST_PORT/auth/login" \
+    '{ "email": "jhorns01@student.bbk.ac.uk", "password": "123456" }'
+jwt="$(echo $do_curl_response | jq --raw-output '.access_token')"
+
+# Hiya! &:D
+do_curl "GET" "http://localhost:$SMOKETEST_PORT/auth/hiya" "" "$jwt"
+
+
+echo "Piazza Smoketest Succeeded! &:)"
+smoketest_success=1

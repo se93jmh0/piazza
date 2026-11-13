@@ -27,3 +27,12 @@ One notable difference is that I had to adopt SQLAlchemy 2.1, else
 ### AI
 
 Not used.
+
+
+## 2026-11-13
+
+Added simple smoketest.
+
+### AI
+
+Not used.
