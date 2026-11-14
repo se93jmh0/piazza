@@ -16,7 +16,7 @@ class DiscussionPost(Base):
 
     __tablename__ = "discussion_posts"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
@@ -24,3 +24,12 @@ class DiscussionPost(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     author: Mapped[models.User] = relationship(models.User)
+
+
+class DiscussionTopic(Base):
+    """A Piazza discussion topic."""
+
+    __tablename__ = "discussion_topics"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
