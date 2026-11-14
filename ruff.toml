@@ -13,7 +13,7 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"tests/**" = [
+"**/tests/**" = [
     "ANN",
     "D"
 ]

@@ -36,3 +36,18 @@ Added simple smoketest.
 ### AI
 
 Not used.
+
+
+## 2026-11-14
+
+Initial work on supporting discussion posts.  We can now create them, although
+there's no support for topics, status, comments, or likes/dislikes.
+
+One thing I'm not entirely happy about is that I'm manually having to restore
+timezones at the SQLAlchemy model layer after doing a refresh.  Feels clumsy,
+but using sqlalchemy.types.DateTime(timezone=True) doesn't appear to work with
+SQLite.
+
+### AI
+
+Not used.

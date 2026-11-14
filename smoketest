@@ -55,16 +55,20 @@ done
 
 
 # Register user.
-do_curl "POST" "http://localhost:$SMOKETEST_PORT/auth/register" \
+do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/auth/register" \
     '{ "email": "jhorns01@student.bbk.ac.uk", "password": "123456" }'
 
 # Log user in.
-do_curl "POST" "http://localhost:$SMOKETEST_PORT/auth/login" \
+do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/auth/login" \
     '{ "email": "jhorns01@student.bbk.ac.uk", "password": "123456" }'
 jwt="$(echo $do_curl_response | jq --raw-output '.access_token')"
 
 # Hiya! &:D
-do_curl "GET" "http://localhost:$SMOKETEST_PORT/auth/hiya" "" "$jwt"
+do_curl "GET" "http://localhost:$PIAZZA_SMOKETEST_PORT/auth/hiya" "" "$jwt"
+
+# Create a discussion post.
+do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts" \
+    '{ "title": "foo", "body": "bar", "expires_at": "2026-11-14T15:42:38Z" }' "$jwt"
 
 
 echo "Piazza Smoketest Succeeded! &:)"
