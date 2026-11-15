@@ -26,6 +26,7 @@ def test_create_discussion_post(client):
             "title": "foo",
             "body": "bar",
             "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
         },
     )
 
@@ -40,6 +41,36 @@ def test_create_discussion_post(client):
     assert post["title"] == "foo"
     assert post["body"] == "bar"
     assert post["expires_at"] == "2026-11-14T15:42:38Z"
+    assert post["topics"] == ["Tech"]
+
+
+def test_create_discussion_post_unknown_topic(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    before_post = datetime.now(timezone.utc)
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["baz"],
+        },
+    )
+
+    assert response.status_code == 422
+    assert "baz" in response.json()["detail"]
 
 
 def test_create_discussion_post_unauthd(client):
@@ -80,6 +111,7 @@ def test_create_discussion_post_encounters_SQLAlchemyError(
             "title": "foo",
             "body": "bar",
             "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
         },
     )
 

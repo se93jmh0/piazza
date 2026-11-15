@@ -27,7 +27,7 @@ def client(tmp_path, session_frobbers):
     throwaway, database."""
 
     engine = create_engine(
-        f"sqlite:///{tmp_path / 'piazzza-test.db'}",
+        f"sqlite:///{tmp_path / 'piazza-test.db'}",
         connect_args={"check_same_thread": False},
     )
     sessions = sessionmaker(bind=engine)

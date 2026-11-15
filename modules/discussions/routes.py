@@ -6,28 +6,38 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-import models
-import modules.discussions.models
-import modules.discussions.schemas
 from database import get_db
+from models import User
 from security import get_current_user
+
+from . import models, schemas
+from .topics_registry import TopicsRegistry
 
 router = APIRouter()
 
 
 @router.post(
     "/posts",
-    response_model=modules.discussions.schemas.DiscussionPost,
+    response_model=schemas.DiscussionPost,
     status_code=201,
 )
 def create_discussion_post(
-    post: modules.discussions.schemas.DiscussionPostCreate,
-    current_user: models.User = Depends(get_current_user),
+    post: schemas.DiscussionPostCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> modules.discussions.schemas.DiscussionPost:
+) -> schemas.DiscussionPost:
     """Create a discussion post."""
 
-    db_post = modules.discussions.models.DiscussionPost(
+    topic_ids = []
+    for topic in post.topics:
+        topic_id = TopicsRegistry.get_db_id(topic)
+        if topic_id is None:
+            raise HTTPException(
+                status_code=422, detail=f"Unknown topic: '{topic}'"
+            )
+        topic_ids.append(topic_id)
+
+    db_post = models.DiscussionPost(
         author_id=current_user.id,
         created_at=datetime.now(timezone.utc),
         title=post.title,
@@ -37,7 +47,12 @@ def create_discussion_post(
     try:
         db.add(db_post)
         db.commit()
-        db.refresh(db_post)
+
+        db.add_all(
+            models.DiscussionPostTopic(post_id=db_post.id, topic_id=topic_id)
+            for topic_id in topic_ids
+        )
+        db.commit()
     except SQLAlchemyError as err:
         raise HTTPException(status_code=500, detail=str(err))
 

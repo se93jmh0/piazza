@@ -51,3 +51,26 @@ SQLite.
 ### AI
 
 Not used.
+
+
+# 2026-11-15
+
+Added support for topics in discussion posts.
+
+Notable stuffs:
+ * I've had to employ `# pyrefly: ignore` in a few places.  It's not currently
+   clear to me if I'm doing something silly, but the code works, so it can't be
+   that silly.  But it'd be good if I could figure out something better, or
+   otherwise confirm that it's a bug.
+ * I'm now seeing more instances of the following when running the unit tests:
+
+       ResourceWarning: unclosed database in <sqlite3.Connection object at ...>
+
+   I'm ignoring it for now, but I'd definitely like to eliminate them at some
+   point.
+
+### AI
+
+Encountered Gemini (or whatever it is that serves the _AI Overview_ on
+google.com) while searching for the reason that my attempted capture of
+already_injected in test_init_encounters_SQLAlchemyError wasn't working.
