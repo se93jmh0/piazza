@@ -26,6 +26,7 @@ def test_create_discussion_post(client):
             "title": "foo",
             "body": "bar",
             "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
         },
     )
 
@@ -40,6 +41,7 @@ def test_create_discussion_post(client):
     assert post["title"] == "foo"
     assert post["body"] == "bar"
     assert post["expires_at"] == "2026-11-14T15:42:38Z"
+    assert post["topics"] == ["Tech"]
 
 
 def test_create_discussion_post_unauthd(client):
@@ -80,6 +82,7 @@ def test_create_discussion_post_encounters_SQLAlchemyError(
             "title": "foo",
             "body": "bar",
             "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
         },
     )
 

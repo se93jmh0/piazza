@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 import models
 import modules.discussions.routes
 from database import engine
-from modules.discussions.topics_seeder import TopicsSeeder
+from modules.discussions.topics_registry import TopicsRegistry
 from routers import auth
 
 
@@ -16,7 +16,7 @@ def create_app(db_engine: Engine = engine) -> FastAPI:
 
     models.Base.metadata.create_all(bind=db_engine)
     with Session(db_engine) as session:
-        TopicsSeeder.init(session)
+        TopicsRegistry.seed_piazza_db(session)
 
     app = FastAPI()
     app.include_router(auth.router, prefix="/auth")

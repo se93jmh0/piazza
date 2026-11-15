@@ -68,8 +68,13 @@ do_curl "GET" "http://localhost:$PIAZZA_SMOKETEST_PORT/auth/hiya" "" "$jwt"
 
 # Create a discussion post.
 do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts" \
-    '{ "title": "foo", "body": "bar", "expires_at": "2026-11-14T15:42:38Z" }' "$jwt"
+    '{ "title": "foo",
+       "body": "bar",
+       "expires_at": "2026-11-14T15:42:38Z",
+       "topics": ["Tech"] }' "$jwt"
+echo $do_curl_response
 
+exit 1
 
 echo "Piazza Smoketest Succeeded! &:)"
 smoketest_success=1
