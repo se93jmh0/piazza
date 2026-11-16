@@ -44,6 +44,45 @@ def test_create_discussion_post(client):
     assert post["topics"] == ["Tech"]
 
 
+def test_create_discussion_postII(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    before_post = datetime.now(timezone.utc)
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "fooII",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Politics"],
+        },
+    )
+
+    assert response.status_code == 201
+    post = response.json()
+    assert post["id"] >= 0
+    assert post["author"] == "user@example.com"
+    assert (
+        datetime.strptime(post["created_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
+        >= before_post
+    )
+    assert post["title"] == "fooII"
+    assert post["body"] == "bar"
+    assert post["expires_at"] == "2026-11-14T15:42:38Z"
+    assert post["topics"] == ["Politics"]
+
+
 def test_create_discussion_post_unknown_topic(client):
     response = client.post(
         "/auth/register",
@@ -117,3 +156,29 @@ def test_create_discussion_post_encounters_SQLAlchemyError(
 
     assert response.status_code == 500
     assert "Uh-Oh! :(" in response.json()["detail"]
+
+
+def test_add_discussion_post_comment(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+
+    assert response.json() == "hi"

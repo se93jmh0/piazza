@@ -53,7 +53,7 @@ SQLite.
 Not used.
 
 
-# 2026-11-15
+## 2026-11-15
 
 Added support for topics in discussion posts.
 
@@ -74,3 +74,11 @@ Notable stuffs:
 Encountered Gemini (or whatever it is that serves the _AI Overview_ on
 google.com) while searching for the reason that my attempted capture of
 already_injected in test_init_encounters_SQLAlchemyError wasn't working.
+
+
+## 2026-11-
+
+
+
+### AI
+

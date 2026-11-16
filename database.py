@@ -6,13 +6,16 @@ from typing import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.pool import NullPool
 
 DATABASE_PATH = os.environ.get(
     "DATABASE_PATH", Path(__file__).resolve().parent / "piazza.db"
 )
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=NullPool
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

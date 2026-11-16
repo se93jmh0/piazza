@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import NullPool
 
 import database
 from exceptions import PiazzaProblem
@@ -13,10 +14,14 @@ from modules.discussions.topics_registry import TopicsRegistry
 
 @pytest.fixture
 def test_db(tmp_path):
-    engine = create_engine(f"sqlite:///{tmp_path / 'piazza-test.db'}")
+    engine = create_engine(
+        f"sqlite:///{tmp_path / 'piazza-test.db'}",
+        poolclass=NullPool,
+    )
     database.Base.metadata.create_all(bind=engine)
     with Session(engine) as session:
         yield session
+        session.close()
 
 
 @pytest.mark.parametrize("topic", ["Politics", "Health", "Sport", "Tech"])

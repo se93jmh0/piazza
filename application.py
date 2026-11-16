@@ -17,6 +17,7 @@ def create_app(db_engine: Engine = engine) -> FastAPI:
     models.Base.metadata.create_all(bind=db_engine)
     with Session(db_engine) as session:
         TopicsRegistry.init(session)
+    session.close()
 
     app = FastAPI()
     app.include_router(auth.router, prefix="/auth")
