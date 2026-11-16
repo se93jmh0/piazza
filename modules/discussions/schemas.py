@@ -24,3 +24,19 @@ class DiscussionPost(BaseModel):
     body: str
     expires_at: datetime
     topics: list[str]
+
+
+class DiscussionPostCommentAdd(BaseModel):
+    """Add a comment on a discussion post."""
+
+    body: str
+
+
+class DiscussionPostComment(BaseModel):
+    """A comment on a discussion post."""
+
+    id: int
+    author: str
+    created_at: datetime
+    post_id: int
+    body: str

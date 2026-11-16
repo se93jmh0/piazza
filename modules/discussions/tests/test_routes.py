@@ -117,3 +117,122 @@ def test_create_discussion_post_encounters_SQLAlchemyError(
 
     assert response.status_code == 500
     assert "Uh-Oh! :(" in response.json()["detail"]
+
+
+def test_add_discussion_post_comment(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    before_comment = datetime.now(timezone.utc)
+    response = client.post(
+        f"/posts/{post_id}/comments",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "body": "frob",
+        },
+    )
+
+    assert response.status_code == 201
+    comment = response.json()
+    assert comment["id"] >= 0
+    assert comment["author"] == "user@example.com"
+    assert (
+        datetime.strptime(comment["created_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
+        >= before_comment
+    )
+    assert comment["body"] == "frob"
+
+
+def test_add_discussion_post_comment_unknown_post(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    before_comment = datetime.now(timezone.utc)
+    response = client.post(
+        f"/posts/1234567890/comments",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "body": "frob",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Unknown post ID: 1234567890"
+
+
+def test_add_discussion_post_comment_encounters_SQLAlchemyError(
+    client, session_frobbers
+):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    def commit_throws_SQLAlchemyError(session):
+        def throw_integrity_error():
+            raise SQLAlchemyError("Uh-Oh! :(")
+
+        session.commit = throw_integrity_error
+
+    session_frobbers.append(commit_throws_SQLAlchemyError)
+
+    before_comment = datetime.now(timezone.utc)
+    response = client.post(
+        f"/posts/{post_id}/comments",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "body": "frob",
+        },
+    )
+
+    assert response.status_code == 500
+    assert "Uh-Oh! :(" in response.json()["detail"]

@@ -72,6 +72,11 @@ do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts" \
        "body": "bar",
        "expires_at": "2026-11-14T15:42:38Z",
        "topics": ["Tech"] }' "$jwt"
+post_id="$(echo $do_curl_response | jq --raw-output '.id')"
+
+# Add a comment to discussion post.
+do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts/$post_id/comments" \
+    '{ "body": "frob" }' "$jwt"
 
 
 echo "Piazza Smoketest Succeeded! &:)"

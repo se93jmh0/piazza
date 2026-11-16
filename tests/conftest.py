@@ -2,15 +2,14 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 # Hardcode a secret before we import any of the Pizza codes.
 os.environ["JWT_SECRET"] = "0123456789ABCDEF0123456789ABCDEF"
 
 from application import create_app
-from database import get_db
+from database import create_sqlite_engine, get_db
+from modules.discussions.topics_registry import TopicsRegistry
 
 
 @pytest.fixture
@@ -26,11 +25,10 @@ def client(tmp_path, session_frobbers):
     """Use this fixture for FastAPI integration tests that use a temporary,
     throwaway, database."""
 
-    engine = create_engine(
-        f"sqlite:///{tmp_path / 'piazza-test.db'}",
-        connect_args={"check_same_thread": False},
-    )
+    engine = create_sqlite_engine(tmp_path / "piazza-test.db")
     sessions = sessionmaker(bind=engine)
+
+    TopicsRegistry._reset()
     app = create_app(engine)
 
     def override_db():

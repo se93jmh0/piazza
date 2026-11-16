@@ -1,7 +1,6 @@
 from unittest.mock import DEFAULT, Mock
 
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -13,7 +12,7 @@ from modules.discussions.topics_registry import TopicsRegistry
 
 @pytest.fixture
 def test_db(tmp_path):
-    engine = create_engine(f"sqlite:///{tmp_path / 'piazza-test.db'}")
+    engine = database.create_sqlite_engine(tmp_path / "piazza-test.db")
     database.Base.metadata.create_all(bind=engine)
     with Session(engine) as session:
         yield session

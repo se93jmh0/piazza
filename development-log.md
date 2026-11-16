@@ -53,7 +53,7 @@ SQLite.
 Not used.
 
 
-# 2026-11-15
+## 2026-11-15
 
 Added support for topics in discussion posts.
 
@@ -74,3 +74,34 @@ Notable stuffs:
 Encountered Gemini (or whatever it is that serves the _AI Overview_ on
 google.com) while searching for the reason that my attempted capture of
 already_injected in test_init_encounters_SQLAlchemyError wasn't working.
+
+
+## 2026-11-16
+
+Added support for adding comments to discussion posts.
+
+The addition of associated unit tests such as test_add_discussion_post_comment
+uncovered a bit of a bug that took me while to track down:
+
+    E               fastapi.exceptions.ResponseValidationError: 1 validation error:
+    E                 {'type': 'missing', 'loc': ('response', 'topics'), 'msg': 'Field required', 'input': <modules.discussions.models.DiscussionPost object at 0x7dbcd20e4910>}
+    E
+    E                 File "/home/jhorns01/Uni/BBK/DataAnalyticsAndAI/AdvancedCloudComputing/piazza/modules/discussions/routes.py", line 19, in create_discussion_post
+    E                   POST /posts
+
+Eventually I figured out that this was due to the TopicsRegistry singleton
+being initialized for every test, but not reset, so it was only populating the
+discussion_topics table for the first test's test database.  Oops.
+
+Part of the reason that this took me so long to track down was due to the fact
+that the foreign key constraints weren't firing, which would have made the
+problem clearer.  Hence the introduction of `pragma foreign_keys=on`.
+
+Other notable stuffs:
+ * Noticed that the existing models' columns with foreign key constraints were
+   nullable.  Terribad.
+ * Added missing types for a couple of the relationship-based model members.
+
+### AI
+
+Not used.
