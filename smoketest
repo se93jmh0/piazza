@@ -78,6 +78,10 @@ post_id="$(echo $do_curl_response | jq --raw-output '.id')"
 do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts/$post_id/comments" \
     '{ "body": "frob" }' "$jwt"
 
+# React to discussion post.
+do_curl "PUT" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts/$post_id/reaction" \
+    '{ "value": "like" }' "$jwt"
+
 
 echo "Piazza Smoketest Succeeded! &:)"
 smoketest_success=1

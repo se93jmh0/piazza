@@ -105,3 +105,13 @@ Other notable stuffs:
 ### AI
 
 Not used.
+
+
+## 2026-11-17
+
+Added support for being able to react to (i.e., like or dislike) discussion
+posts.
+
+### AI
+
+Not used.

@@ -40,3 +40,17 @@ class DiscussionPostComment(BaseModel):
     created_at: datetime
     post_id: int
     body: str
+
+
+class DiscussionPostReaction(BaseModel):
+    """React to a discussion post."""
+
+    value: str
+
+
+class DiscussionPostReactionCounts(BaseModel):
+    """Like&Dislike counts for a discussion post."""
+
+    post_id: int
+    likes: int
+    dislikes: int
