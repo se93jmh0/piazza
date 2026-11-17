@@ -236,3 +236,183 @@ def test_add_discussion_post_comment_encounters_SQLAlchemyError(
 
     assert response.status_code == 500
     assert "Uh-Oh! :(" in response.json()["detail"]
+
+
+def test_react_to_discussion_post_like(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    response = client.put(
+        f"/posts/{post_id}/reaction",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"value": "like"},
+    )
+
+    assert response.status_code == 200
+    reaction_counts = response.json()
+    assert reaction_counts["post_id"] == post_id
+    assert reaction_counts["likes"] == 1
+    assert reaction_counts["dislikes"] == 0
+
+
+def test_react_to_discussion_post_dislike(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    response = client.put(
+        f"/posts/{post_id}/reaction",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"value": "dislike"},
+    )
+
+    assert response.status_code == 200
+    reaction_counts = response.json()
+    assert reaction_counts["post_id"] == post_id
+    assert reaction_counts["likes"] == 0
+    assert reaction_counts["dislikes"] == 1
+
+
+def test_react_to_discussion_post_unknown_post(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    before_comment = datetime.now(timezone.utc)
+    response = client.put(
+        f"/posts/1234567890/reaction",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"value": "like"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Unknown post ID: 1234567890"
+
+
+def test_react_to_discussion_post_invalid_value(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    response = client.put(
+        f"/posts/{post_id}/reaction",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"value": "pooh-pooh"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Invalid reaction: 'pooh-pooh'"
+
+
+def test_react_to_discussion_post_encounters_SQLAlchemyError(
+    client, session_frobbers
+):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    def commit_throws_SQLAlchemyError(session):
+        def throw_integrity_error():
+            raise SQLAlchemyError("Uh-Oh! :(")
+
+        session.commit = throw_integrity_error
+
+    session_frobbers.append(commit_throws_SQLAlchemyError)
+
+    response = client.put(
+        f"/posts/{post_id}/reaction",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"value": "like"},
+    )
+
+    assert response.status_code == 500
+    assert "Uh-Oh! :(" in response.json()["detail"]

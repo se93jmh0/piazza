@@ -78,3 +78,21 @@ class DiscussionPostComment(Base):
 
     __author: Mapped[models.User] = relationship(models.User)
     author = property(lambda self: self.__author.email)
+
+
+class DiscussionPostReaction(Base):
+    """Reactions on a Piazza discussion post."""
+
+    __tablename__ = "discussion_post_reactions"
+    __table_args__ = (PrimaryKeyConstraint("post_id", "user_id"),)
+
+    post_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("discussion_posts.id"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    # 1 or 0.  But specifically integer for the purposes of SUM().
+    like: Mapped[int] = mapped_column(Integer, default=0)
+    # 1 or 0.  But specifically integer for the purposes of SUM().
+    dislike: Mapped[int] = mapped_column(Integer, default=0)

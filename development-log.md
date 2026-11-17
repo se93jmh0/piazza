@@ -105,3 +105,11 @@ Other notable stuffs:
 ### AI
 
 Not used.
+
+
+## 2026-11-17
+
+
+
+### AI
+
