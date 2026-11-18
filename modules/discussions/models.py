@@ -35,6 +35,8 @@ class DiscussionPost(Base):
         lambda self: [topic.topic.name for topic in self.__topics]
     )
 
+    comments: Mapped[list["DiscussionPostComment"]] = relationship()
+
 
 class DiscussionTopic(Base):
     """A Piazza discussion topic."""
@@ -72,7 +74,10 @@ class DiscussionPostComment(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     post_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("discussion_posts.id"), nullable=False
+        Integer,
+        ForeignKey("discussion_posts.id"),
+        nullable=False,
+        back_populates="comments",
     )
     body: Mapped[str] = mapped_column(String, nullable=False)
 

@@ -54,6 +54,8 @@ def create_discussion_post(
             for topic_id in topic_ids
         )
         db.commit()
+
+        db.flush()
     except SQLAlchemyError as err:
         raise HTTPException(status_code=500, detail=str(err))
 
@@ -153,3 +155,31 @@ def react_to_discussion_post(
         )
     except SQLAlchemyError as err:
         raise HTTPException(status_code=500, detail=str(err))
+
+
+@router.get(
+    "/posts/{post_id}", response_model=schemas.DiscussionPost, status_code=200
+)
+def get_discussion_post(
+    post_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> schemas.DiscussionPost:
+    """Get a discussion post."""
+
+    try:
+        db_post = db.get(
+            models.DiscussionPost, post_id, populate_existing=True
+        )
+        if db_post == None:
+            raise HTTPException(
+                status_code=404, detail=f"Unknown post ID: {post_id}"
+            )
+    except SQLAlchemyError as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+    # Unfortunately TZ info is lost.  For reasons.
+    db_post.created_at = db_post.created_at.astimezone(timezone.utc)
+    db_post.expires_at = db_post.expires_at.astimezone(timezone.utc)
+
+    return db_post

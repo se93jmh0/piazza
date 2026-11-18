@@ -6,6 +6,7 @@ from typing import Generator
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.pool import NullPool
 
 DATABASE_PATH = os.environ.get(
     "DATABASE_PATH", Path(__file__).resolve().parent / "piazza.db"
@@ -17,7 +18,9 @@ def create_sqlite_engine(database_file: Path) -> Engine:
 
     database_url = f"sqlite:///{database_file}"
     engine = create_engine(
-        database_url, connect_args={"check_same_thread": False}
+        database_url,
+        connect_args={"check_same_thread": False},
+        poolclass=NullPool,
     )
 
     # fmt: off
