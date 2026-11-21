@@ -462,3 +462,58 @@ def test_get_discussion_post(client):
     assert post["comments"] == []
     assert post["likes"] == 0
     assert post["dislikes"] == 0
+
+
+def test_get_discussion_post_unknown_post(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    response = client.get(
+        f"/posts/1234567890", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Unknown post ID: 1234567890"
+
+
+def test_get_discussion_post_encounters_SQLAlchemyError(
+    client, session_frobbers
+):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.get(
+        f"/posts/1234567890", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    def get_throws_SQLAlchemyError(session):
+        def throw_SQLAlchemyError(*args, **kwargs):
+            raise SQLAlchemyError("Uh-Oh! :(")
+
+        session.get = throw_SQLAlchemyError
+
+    session_frobbers.append(get_throws_SQLAlchemyError)
+
+    response = client.get(
+        f"/posts/1234567890", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 500
+    assert "Uh-Oh! :(" in response.json()["detail"]
