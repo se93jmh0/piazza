@@ -26,6 +26,8 @@ class DiscussionPost(BaseModel):
     topics: list[str]
 
     comments: list[DiscussionPostComment]
+    likes: int
+    dislikes: int
 
 
 class DiscussionPostCommentAdd(BaseModel):
