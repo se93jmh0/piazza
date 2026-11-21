@@ -74,15 +74,16 @@ class DiscussionPostComment(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     post_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("discussion_posts.id"),
-        nullable=False,
-        back_populates="comments",
+        Integer, ForeignKey("discussion_posts.id"), nullable=False
     )
     body: Mapped[str] = mapped_column(String, nullable=False)
 
     __author: Mapped[models.User] = relationship(models.User)
     author = property(lambda self: self.__author.email)
+
+    discussion_post: Mapped[DiscussionPostComment] = relationship(
+        DiscussionPost, back_populates="comments"
+    )
 
 
 class DiscussionPostReaction(Base):

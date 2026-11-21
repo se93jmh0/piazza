@@ -25,6 +25,8 @@ class DiscussionPost(BaseModel):
     expires_at: datetime
     topics: list[str]
 
+    comments: list[DiscussionPostComment]
+
 
 class DiscussionPostCommentAdd(BaseModel):
     """Add a comment on a discussion post."""
