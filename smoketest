@@ -82,6 +82,10 @@ do_curl "POST" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts/$post_id/comments"
 do_curl "PUT" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts/$post_id/reaction" \
     '{ "value": "like" }' "$jwt"
 
+# Get discussion post.
+do_curl "GET" "http://localhost:$PIAZZA_SMOKETEST_PORT/posts/$post_id" "" "$jwt"
+echo $do_curl_response | jq
+
 
 echo "Piazza Smoketest Succeeded! &:)"
 smoketest_success=1

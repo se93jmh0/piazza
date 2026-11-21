@@ -57,7 +57,6 @@ def test_create_discussion_post_unknown_topic(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
 
-    before_post = datetime.now(timezone.utc)
     response = client.post(
         "/posts",
         headers={"Authorization": f"Bearer {token}"},
@@ -416,3 +415,50 @@ def test_react_to_discussion_post_encounters_SQLAlchemyError(
 
     assert response.status_code == 500
     assert "Uh-Oh! :(" in response.json()["detail"]
+
+
+def test_get_discussion_post(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    before_post = datetime.now(timezone.utc)
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    response = client.get(
+        f"/posts/{post_id}", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    post = response.json()
+    assert post["id"] >= 0
+    assert post["author"] == "user@example.com"
+    assert (
+        datetime.strptime(post["created_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
+        >= before_post
+    )
+    assert post["title"] == "foo"
+    assert post["body"] == "bar"
+    assert post["expires_at"] == "2026-11-14T15:42:38Z"
+    assert post["topics"] == ["Tech"]
+    assert post["comments"] == []
+    assert post["likes"] == 0
+    assert post["dislikes"] == 0

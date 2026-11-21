@@ -2,13 +2,31 @@
 
 from datetime import datetime
 
-from pydantic_core.core_schema import nullable_schema
-from sqlalchemy import DateTime, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, Integer, String, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy.schema import ForeignKey, PrimaryKeyConstraint
+from sqlalchemy.sql.expression import func
 
 import models
 from database import Base
+
+
+class DiscussionPostReaction(Base):
+    """Reactions on a Piazza discussion post."""
+
+    __tablename__ = "discussion_post_reactions"
+    __table_args__ = (PrimaryKeyConstraint("post_id", "user_id"),)
+
+    post_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("discussion_posts.id"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    # 1 or 0.  But specifically integer for the purposes of SUM().
+    like: Mapped[int] = mapped_column(Integer, default=0)
+    # 1 or 0.  But specifically integer for the purposes of SUM().
+    dislike: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class DiscussionPost(Base):
@@ -33,6 +51,18 @@ class DiscussionPost(Base):
     )
     topics = property(
         lambda self: [topic.topic.name for topic in self.__topics]
+    )
+
+    comments: Mapped[list["DiscussionPostComment"]] = relationship()
+    likes: Mapped[int] = column_property(
+        select(func.coalesce(func.sum(DiscussionPostReaction.like), 0))
+        .where(DiscussionPostReaction.post_id == id)
+        .scalar_subquery()
+    )
+    dislikes: Mapped[int] = column_property(
+        select(func.coalesce(func.sum(DiscussionPostReaction.dislike), 0))
+        .where(DiscussionPostReaction.post_id == id)
+        .scalar_subquery()
     )
 
 
@@ -79,20 +109,6 @@ class DiscussionPostComment(Base):
     __author: Mapped[models.User] = relationship(models.User)
     author = property(lambda self: self.__author.email)
 
-
-class DiscussionPostReaction(Base):
-    """Reactions on a Piazza discussion post."""
-
-    __tablename__ = "discussion_post_reactions"
-    __table_args__ = (PrimaryKeyConstraint("post_id", "user_id"),)
-
-    post_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("discussion_posts.id"), nullable=False
+    discussion_post: Mapped[DiscussionPostComment] = relationship(
+        DiscussionPost, back_populates="comments"
     )
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=False
-    )
-    # 1 or 0.  But specifically integer for the purposes of SUM().
-    like: Mapped[int] = mapped_column(Integer, default=0)
-    # 1 or 0.  But specifically integer for the purposes of SUM().
-    dislike: Mapped[int] = mapped_column(Integer, default=0)

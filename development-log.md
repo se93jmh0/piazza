@@ -115,3 +115,17 @@ posts.
 ### AI
 
 Not used.
+
+
+### 2026-11-21
+
+Added support for getting an individual discussion post, and plumbed in comments
+and likes and dislikes.
+
+One thing I'm not entirely happy about is that get_discussion_post takes a
+current_user parameter to enforce bearer authentication, but it's not actually
+used in the function body.  I wonder if there's a better way...
+
+### AI
+
+Not used.

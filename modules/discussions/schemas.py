@@ -24,6 +24,9 @@ class DiscussionPost(BaseModel):
     body: str
     expires_at: datetime
     topics: list[str]
+    comments: list[DiscussionPostComment]
+    likes: int
+    dislikes: int
 
 
 class DiscussionPostCommentAdd(BaseModel):
