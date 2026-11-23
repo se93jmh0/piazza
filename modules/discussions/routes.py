@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import functions
@@ -177,3 +178,26 @@ def get_discussion_post(
     db_post.expires_at = db_post.expires_at.astimezone(timezone.utc)
 
     return db_post
+
+
+@router.get("/posts", response_model=list[schemas.DiscussionPost])
+def get_discussion_posts(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[schemas.DiscussionPost]:
+    """Get discussion posts."""
+
+    try:
+        statement = select(models.DiscussionPost)
+        db_posts = db.scalars(statement).all()
+
+    except SQLAlchemyError as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+    for db_post in db_posts:
+        # Unfortunately TZ info is lost.  For reasons.
+        db_post.created_at = db_post.created_at.astimezone(timezone.utc)
+        db_post.expires_at = db_post.expires_at.astimezone(timezone.utc)
+
+    # pyrefly: ignore
+    return db_posts

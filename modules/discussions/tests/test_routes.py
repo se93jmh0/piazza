@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
+from unittest.mock import Mock
 
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from tests.conftest import client, session_frobbers
 
@@ -513,6 +515,89 @@ def test_get_discussion_post_encounters_SQLAlchemyError(
 
     response = client.get(
         f"/posts/1234567890", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 500
+    assert "Uh-Oh! :(" in response.json()["detail"]
+
+
+def test_get_discussion_posts(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    before_post = datetime.now(timezone.utc)
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "foo",
+            "body": "bar",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    post_id = response.json()["id"]
+
+    response = client.get(
+        f"/posts", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    posts = response.json()
+    assert len(posts) == 1
+    post = posts[0]
+    assert post["id"] == post_id
+    assert post["author"] == "user@example.com"
+    assert (
+        datetime.strptime(post["created_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
+        >= before_post
+    )
+    assert post["title"] == "foo"
+    assert post["body"] == "bar"
+    assert post["expires_at"] == "2026-11-14T15:42:38Z"
+    assert post["topics"] == ["Tech"]
+    assert post["comments"] == []
+    assert post["likes"] == 0
+    assert post["dislikes"] == 0
+
+
+def test_get_discussion_posts_encounters_SQLAlchemyError(
+    client, session_frobbers
+):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    def query_throws_SQLAlchemyError(session: Session):
+        def throw_SQLAlchemyError(*args, **kwargs):
+            raise SQLAlchemyError("Uh-Oh! :(")
+
+        session.scalars = Mock(
+            wraps=session.scalars,
+            side_effect=throw_SQLAlchemyError,
+        )
+
+    session_frobbers.append(query_throws_SQLAlchemyError)
+
+    response = client.get(
+        f"/posts", headers={"Authorization": f"Bearer {token}"}
     )
 
     assert response.status_code == 500
