@@ -191,8 +191,10 @@ def get_discussion_posts(
     try:
         statement = select(models.DiscussionPost)
         if topic:
-            statement = statement.join(models.DiscussionPost.db_topics).where(
-                models.DiscussionTopic.id == 1
+            statement = (
+                statement.join(models.DiscussionPost.db_topics)
+                .join(models.DiscussionPostTopic.topic)
+                .where(models.DiscussionTopic.name == topic)
             )
         db_posts = db.scalars(statement).all()
 

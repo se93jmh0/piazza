@@ -639,7 +639,6 @@ def test_get_discussion_posts_with_topic_filter(client):
     )
     assert response.status_code == 201
     tech_post_id = response.json()["id"]
-    tech_post_id = 10
     response = client.post(
         "/posts",
         headers={"Authorization": f"Bearer {token}"},
@@ -656,7 +655,6 @@ def test_get_discussion_posts_with_topic_filter(client):
         f"/posts?topic=Tech", headers={"Authorization": f"Bearer {token}"}
     )
 
-    assert response.json()[0]["topics"] == ""
     assert response.status_code == 200
     posts = response.json()
     assert len(posts) == 1
