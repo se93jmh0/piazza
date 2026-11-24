@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DiscussionPostCreate(BaseModel):
@@ -23,7 +23,7 @@ class DiscussionPost(BaseModel):
     title: str
     body: str
     expires_at: datetime
-    topics: list[str]
+    topics: list[str] = Field(validation_alias="topic_names")
     comments: list[DiscussionPostComment]
     likes: int
     dislikes: int

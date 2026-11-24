@@ -46,11 +46,11 @@ class DiscussionPost(Base):
     __author: Mapped[models.User] = relationship(models.User)
     author = property(lambda self: self.__author.email)
 
-    __topics: Mapped[list["DiscussionPostTopic"]] = relationship(
+    topics: Mapped[list["DiscussionPostTopic"]] = relationship(
         "DiscussionPostTopic"
     )
-    topics = property(
-        lambda self: [topic.topic.name for topic in self.__topics]
+    topic_names = property(
+        lambda self: [topic.topic.name for topic in self.topics]
     )
 
     comments: Mapped[list["DiscussionPostComment"]] = relationship()

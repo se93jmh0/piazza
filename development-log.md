@@ -140,3 +140,23 @@ Still need to add the ability to filter by topic and/or status.
 ### AI
 
 Not used.
+
+
+## 2026-11-24
+
+Added the ability to filter discussion posts by topic.
+
+The slightly tricky bit here was to do with how I'd modelled a
+`DiscussionPost`'s topics in SQLAlchemy for validation by Pydantic.  To make
+things easy I'd named the topic names as a computed attribute called `topics`,
+whereas the associated `DiscussionPostTopic` objects were stored as `__topics`.
+Since a prefix of `__` means that the attribute is private, it was not possible
+to reference the relationship I needed for the first join in
+`get_discussion_posts`.  My solution was to accept the fact that I was clearly
+partly designing SQLAlchemy models for Pydantic, and thus rename the attributes
+in SQLAlchemy's `DiscussionPost`, and use a `validation_alias` in Pydantic's
+`DiscussionPost` to point it at the flattened list of topic names.
+
+### AI
+
+Not used.

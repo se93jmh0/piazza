@@ -602,3 +602,60 @@ def test_get_discussion_posts_encounters_SQLAlchemyError(
 
     assert response.status_code == 500
     assert "Uh-Oh! :(" in response.json()["detail"]
+
+
+def test_get_discussion_posts_with_topic_filter(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/auth/login",
+        json={"email": "user@example.com", "password": "hunter2"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Politics Post 0",
+            "body": "Lorem ipsum",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Politics"],
+        },
+    )
+    assert response.status_code == 201
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Tech Post 0",
+            "body": "Lorem ipsum",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Tech"],
+        },
+    )
+    assert response.status_code == 201
+    tech_post_id = response.json()["id"]
+    response = client.post(
+        "/posts",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Politics Post 1",
+            "body": "Lorem ipsum",
+            "expires_at": "2026-11-14T15:42:38Z",
+            "topics": ["Politics"],
+        },
+    )
+    assert response.status_code == 201
+
+    response = client.get(
+        f"/posts?topic=Tech", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    posts = response.json()
+    assert len(posts) == 1
+    assert posts[0]["id"] == tech_post_id
