@@ -182,6 +182,7 @@ def get_discussion_post(
 
 @router.get("/posts", response_model=list[schemas.DiscussionPost])
 def get_discussion_posts(
+    topic: str = "",
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[schemas.DiscussionPost]:
@@ -189,6 +190,10 @@ def get_discussion_posts(
 
     try:
         statement = select(models.DiscussionPost)
+        if topic:
+            statement = statement.join(models.DiscussionPost.db_topics).where(
+                models.DiscussionTopic.id == 1
+            )
         db_posts = db.scalars(statement).all()
 
     except SQLAlchemyError as err:
