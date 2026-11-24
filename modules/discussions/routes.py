@@ -14,6 +14,7 @@ from security import get_current_user
 
 from . import models, schemas
 from .topics_registry import TopicsRegistry
+from .utils import get_current_time
 
 router = APIRouter()
 
@@ -183,8 +184,10 @@ def get_discussion_post(
 @router.get("/posts", response_model=list[schemas.DiscussionPost])
 def get_discussion_posts(
     topic: str = "",
+    status: str = "",
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    current_time: datetime = Depends(get_current_time),
 ) -> list[schemas.DiscussionPost]:
     """Get discussion posts."""
 
@@ -196,6 +199,20 @@ def get_discussion_posts(
                 .join(models.DiscussionPostTopic.topic)
                 .where(models.DiscussionTopic.name == topic)
             )
+        if status:
+            if status == "Live":
+                statement = statement.where(
+                    models.DiscussionPost.expires_at > current_time
+                )
+            elif status == "Expired":
+                statement = statement.where(
+                    models.DiscussionPost.expires_at <= current_time
+                )
+            else:
+                raise HTTPException(
+                    status_code=500, detail=f"Invalid status: '{status}'"
+                )
+
         db_posts = db.scalars(statement).all()
 
     except SQLAlchemyError as err:

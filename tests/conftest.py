@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,6 +11,7 @@ os.environ["JWT_SECRET"] = "0123456789ABCDEF0123456789ABCDEF"
 from application import create_app
 from database import create_sqlite_engine, get_db
 from modules.discussions.topics_registry import TopicsRegistry
+from modules.discussions.utils import get_current_time
 
 
 @pytest.fixture
@@ -18,6 +20,13 @@ def session_frobbers():
     of the client fixture."""
 
     return []
+
+
+# @pytest.fixture
+def fake_time():
+    """TODO."""
+
+    return datetime.strptime("2026-11-24T22:47:30Z", "%Y-%m-%dT%H:%M:%S%z")
 
 
 @pytest.fixture
@@ -38,6 +47,7 @@ def client(tmp_path, session_frobbers):
             yield session
 
     app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_time] = fake_time
     try:
         with TestClient(app) as test_client:
             yield test_client

@@ -23,6 +23,7 @@ class DiscussionPost(BaseModel):
     title: str
     body: str
     expires_at: datetime
+    # status: str
     topics: list[str] = Field(validation_alias="topic_names")
     comments: list[DiscussionPostComment]
     likes: int
