@@ -28,6 +28,7 @@ def create_discussion_post(
     post: schemas.DiscussionPostCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    current_time: datetime = Depends(get_current_time),
 ) -> schemas.DiscussionPost:
     """Create a discussion post."""
 
@@ -63,7 +64,13 @@ def create_discussion_post(
     db_post.created_at = db_post.created_at.astimezone(timezone.utc)
     db_post.expires_at = db_post.expires_at.astimezone(timezone.utc)
 
-    return db_post
+    response = schemas.DiscussionPost.model_validate(
+        db_post, from_attributes=True
+    )
+    response.status = "Live"
+    return response
+
+    # return db_post
 
 
 @router.post(

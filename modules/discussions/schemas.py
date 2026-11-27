@@ -1,8 +1,16 @@
 """Piazza's discussions-related Pydantic-based API schemas."""
 
 from datetime import datetime
+from typing import Annotated, Any
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SkipValidation,
+    model_validator,
+)
+from typing_extensions import Self
 
 
 class DiscussionPostCreate(BaseModel):
@@ -17,17 +25,26 @@ class DiscussionPostCreate(BaseModel):
 class DiscussionPost(BaseModel):
     """A discussion post."""
 
+    # model_config = ConfigDict(from_attributes=True)
+
     id: int
     author: str
     created_at: datetime
     title: str
     body: str
     expires_at: datetime
-    # status: str
+    status: Annotated[str, SkipValidation]
     topics: list[str] = Field(validation_alias="topic_names")
     comments: list[DiscussionPostComment]
     likes: int
     dislikes: int
+
+    @model_validator(mode="after")
+    # pyrefly: ignore
+    def noop_validation(self) -> Self:
+        """TODO."""
+        print("hi")
+        return self
 
 
 class DiscussionPostCommentAdd(BaseModel):

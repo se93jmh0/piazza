@@ -44,6 +44,7 @@ def test_create_discussion_post(client):
     assert post["body"] == "bar"
     assert post["expires_at"] == "2026-11-14T15:42:38Z"
     assert post["topics"] == ["Tech"]
+    assert post["status"] == "Liveish"
 
 
 def test_create_discussion_post_unknown_topic(client):
